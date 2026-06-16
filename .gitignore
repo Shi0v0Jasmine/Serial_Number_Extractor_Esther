@@ -2,6 +2,7 @@
 build/
 dist/
 outputs/
+tmp_release_verify/
 __pycache__/
 *.pyc
 *.pyo
