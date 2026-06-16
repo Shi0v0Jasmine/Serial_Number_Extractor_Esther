@@ -471,6 +471,27 @@ def find_product_block(blocks: list[ProductBlock], line_index: int) -> ProductBl
     return None
 
 
+def find_usi_code_lines(lines: list[str]) -> set[int]:
+    usi_lines: set[int] = set()
+    in_usi_block = False
+    for idx, line in enumerate(lines):
+        upper = line.upper()
+        if "USI CODE" in upper:
+            in_usi_block = True
+            usi_lines.add(idx)
+            continue
+        if not in_usi_block:
+            continue
+        if ADTRAN_QTY_RE.match(line) or ADTRAN_PART_RE.match(line) or SERIAL_MARKER_RE.search(line):
+            in_usi_block = False
+            continue
+        if "INVOICE DETAILS PAGE" in upper or "THIS POSITION LINE CONTAINS" in upper:
+            in_usi_block = False
+            continue
+        usi_lines.add(idx)
+    return usi_lines
+
+
 def find_item_hint(lines: list[str], line_index: int) -> str:
     for idx in range(line_index, max(-1, line_index - 10), -1):
         line = lines[idx]
@@ -478,6 +499,15 @@ def find_item_hint(lines: list[str], line_index: int) -> str:
         if matches:
             return matches[-1]
     return ""
+
+
+def duplicate_serial_key(source_file: str, serial: str) -> tuple[str, str]:
+    serial = normalize_serial(serial)
+    if serial.startswith("LBADVA"):
+        return (source_file, serial.removeprefix("LBADVA"))
+    if serial.startswith("FA"):
+        return (source_file, serial.removeprefix("FA"))
+    return (source_file, serial)
 
 
 def add_record(
@@ -492,7 +522,7 @@ def add_record(
     product_block: ProductBlock | None,
 ) -> None:
     serial = normalize_serial(serial)
-    key = (source_file, serial)
+    key = duplicate_serial_key(source_file, serial)
     if not serial or key in seen:
         return
     seen.add(key)
@@ -528,6 +558,7 @@ def extract_document_records(
     full_text = "\n".join(lines)
     offsets = line_offsets(lines)
     product_blocks = build_product_blocks(lines)
+    usi_code_lines = find_usi_code_lines(lines)
 
     for match in RANGE_RE.finditer(full_text):
         raw_range = match.group(0)
@@ -542,6 +573,8 @@ def extract_document_records(
             add_record(records, seen, source_file, page, serial, item_hint, "range_expanded", "high", product_block)
 
     for line_index, line in enumerate(lines):
+        if line_index in usi_code_lines:
+            continue
         item_hint = find_item_hint(lines, line_index)
         product_block = find_product_block(product_blocks, line_index)
         page = line_pages[line_index] if line_index < len(line_pages) else 1
@@ -556,6 +589,8 @@ def extract_document_records(
 
     allow_numeric_context = bool(re.search(r"LOT/SERIAL|\bECI\b", full_text, re.IGNORECASE))
     for idx in sorted(context_indexes):
+        if idx in usi_code_lines:
+            continue
         line = lines[idx]
         if allow_numeric_context:
             product_block = find_product_block(product_blocks, idx)
@@ -570,6 +605,8 @@ def extract_document_records(
             token = match.group(0)
             if is_probable_serial(token, allow_numeric=True):
                 line_index = line_index_from_offset(offsets, match.start())
+                if line_index in usi_code_lines:
+                    continue
                 product_block = find_product_block(product_blocks, line_index)
                 page = line_pages[line_index] if line_index < len(line_pages) else 1
                 add_record(records, seen, source_file, page, token, "", "lot_serial_numeric_fallback", "medium", product_block)
