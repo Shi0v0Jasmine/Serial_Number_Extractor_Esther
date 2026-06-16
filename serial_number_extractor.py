@@ -75,6 +75,7 @@ NUMERIC_CONTEXT_RE = re.compile(r"\b\d{8,14}\b")
 RANGE_RE = re.compile(r"\b([A-Z]+)(\d{8,})\s*-\s*(\d{1,})\b", re.IGNORECASE)
 ADTRAN_PART_RE = re.compile(r"^\d{1,5}\s+([A-Z0-9][A-Z0-9/#.+_-]{3,})$", re.IGNORECASE)
 ADTRAN_QTY_RE = re.compile(r"^(\d+)\s+\d+\s+\d+\s+[\d.,]+\s+[\d.,]+$")
+ADTRAN_POSITION_LINE_RE = re.compile(r"^(\d+)\s+([A-Z0-9][A-Z0-9/#.+_-]{3,})\s+(.+)$", re.IGNORECASE)
 CIENA_PART_RE = re.compile(r"^\d+\s+(\d+)\s+EA\s+([A-Z0-9][A-Z0-9/#.+_-]+)$", re.IGNORECASE)
 DTC_QTY_RE = re.compile(r"^\d{1,5}$")
 PURE_IT_RE = re.compile(r"^(.+?)\s+\(Quantit[eé]\s+(\d+)\)\s*:\s*(.+)$", re.IGNORECASE)
@@ -85,6 +86,7 @@ SERIAL_MARKER_RE = re.compile(
     r"(S/N|Serial\s*(?:number|#|no)|LOT/SERIAL|SN\s*number|Serial\s*numbers\s*are)",
     re.IGNORECASE,
 )
+S_N_MARKER_RE = re.compile(r"\bS/N\b|\bSN\s*:", re.IGNORECASE)
 
 ITEM_HINT_RE = re.compile(
     r"\b("
@@ -181,6 +183,8 @@ def import_runtime_dependencies():
 def normalize_serial(value: str) -> str:
     value = value.strip().strip(",;:.()[]{}<>")
     value = value.strip("*")
+    value = re.sub(r"^(?:S/N|SN)\s*:?", "", value, flags=re.IGNORECASE)
+    value = re.sub(r"^(FA\d{8,})SN$", r"\1", value, flags=re.IGNORECASE)
     return value.upper()
 
 
@@ -281,6 +285,8 @@ def is_part_number_like(value: str) -> bool:
         return False
     if re.fullmatch(r"\d{6,10}", value):
         return True
+    if re.fullmatch(r"BC\d{8}", value, re.IGNORECASE):
+        return True
     if is_probable_serial(value, allow_numeric=True) and not re.search(r"[/#.+_-]", value):
         return False
     if re.fullmatch(r"\d{1,5}", value):
@@ -355,10 +361,29 @@ def next_matching_line(lines: list[str], start: int, pattern: re.Pattern[str]) -
 
 def find_adtran_qty(lines: list[str], start: int, end: int) -> int | None:
     for idx in range(start + 1, min(end + 1, len(lines))):
+        if "THIS POSITION LINE CONTAINS" in lines[idx].upper():
+            for position_idx in range(idx + 1, min(end + 1, len(lines))):
+                parsed = parse_adtran_position_line(lines[position_idx])
+                if parsed:
+                    return parsed[0]
+                if ADTRAN_QTY_RE.match(lines[position_idx]) or ADTRAN_PART_RE.match(lines[position_idx]):
+                    break
         match = ADTRAN_QTY_RE.match(lines[idx])
         if match:
             return int(match.group(1))
     return None
+
+
+def parse_adtran_position_line(line: str) -> tuple[int, str, str] | None:
+    match = ADTRAN_POSITION_LINE_RE.match(line)
+    if not match:
+        return None
+    qty = int(match.group(1))
+    part_number = clean_part_value(match.group(2))
+    part_name = strip_serials_from_part_name(match.group(3))
+    if not is_part_number_like(part_number) or not is_valid_part_name(part_name):
+        return None
+    return qty, part_number, part_name
 
 
 def finalize_product_blocks(blocks: list[ProductBlock], line_count: int) -> list[ProductBlock]:
@@ -482,7 +507,13 @@ def find_usi_code_lines(lines: list[str]) -> set[int]:
             continue
         if not in_usi_block:
             continue
-        if ADTRAN_QTY_RE.match(line) or ADTRAN_PART_RE.match(line) or SERIAL_MARKER_RE.search(line):
+        if (
+            ADTRAN_QTY_RE.match(line)
+            or ADTRAN_PART_RE.match(line)
+            or ADTRAN_POSITION_LINE_RE.match(line)
+            or SERIAL_MARKER_RE.search(line)
+            or S_N_MARKER_RE.search(line)
+        ):
             in_usi_block = False
             continue
         if "INVOICE DETAILS PAGE" in upper or "THIS POSITION LINE CONTAINS" in upper:
@@ -558,7 +589,8 @@ def extract_document_records(
     full_text = "\n".join(lines)
     offsets = line_offsets(lines)
     product_blocks = build_product_blocks(lines)
-    usi_code_lines = find_usi_code_lines(lines)
+    has_primary_serial_marker = bool(SERIAL_MARKER_RE.search(full_text) or S_N_MARKER_RE.search(full_text))
+    usi_code_lines = find_usi_code_lines(lines) if has_primary_serial_marker else set()
 
     for match in RANGE_RE.finditer(full_text):
         raw_range = match.group(0)

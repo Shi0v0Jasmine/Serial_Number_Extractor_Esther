@@ -1,5 +1,7 @@
 # Serial Number Extractor App
 
+Fix note 2026-06-16: Adtran `This Position Line Contains` rows now provide quantity only; final Part Number / Part Name come from the parent product block. When a primary serial marker such as S/N exists alongside USI Code, the marked serial is preferred; when only USI Code exists, USI Code is exported as the serial number.
+
 这个小工具用于 Esther / BizOps 场景：从 vendor PDF、packing list、invoice 中提取 Part Number、Part Name 和 Serial Number，并生成 Excel / CSV。工具本地运行，不上传 PDF 到外部 AI 或云服务。
 
 ## 推荐运行方式

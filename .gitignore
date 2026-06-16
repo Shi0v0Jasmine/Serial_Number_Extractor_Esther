@@ -3,6 +3,8 @@ build/
 dist/
 outputs/
 tmp_release_verify/
+release*/
+SerialNumberExtractor*.zip
 __pycache__/
 *.pyc
 *.pyo
