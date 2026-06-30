@@ -1,0 +1,15 @@
+{
+  "base_pdf_count": 7,
+  "adtran_fix_pdf_count": 2,
+  "base_total": 1073,
+  "adtran_fix_total": 242,
+  "grand_total": 1315,
+  "eci_blocks": [
+    ["ON324921", "OTR100Q28_LR4", 1, 1, "OK"],
+    ["ON324921", "OTR100Q28_LR4", 12, 12, "OK"],
+    ["X66706", "TM400ENB INCLUDING FIPS KIT", 2, 2, "OK"]
+  ],
+  "forbidden_part_numbers": [
+    "1063707680-11"
+  ]
+}

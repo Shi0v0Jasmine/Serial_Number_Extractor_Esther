@@ -1,0 +1,361 @@
+{
+  "version": "2.0.0",
+  "cases": {
+    "cross_page_table": {
+      "pdf": "cross_page_table.pdf",
+      "spans": [
+        {
+          "text": "PART NUMBER",
+          "page": 1,
+          "bbox": [
+            80,
+            120,
+            344,
+            172
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "PART NAME",
+          "page": 1,
+          "bbox": [
+            420,
+            120,
+            636,
+            172
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "QTY",
+          "page": 1,
+          "bbox": [
+            1050,
+            120,
+            1122,
+            172
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "S/N",
+          "page": 1,
+          "bbox": [
+            1320,
+            120,
+            1392,
+            172
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "PN-101",
+          "page": 1,
+          "bbox": [
+            80,
+            260,
+            224,
+            312
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "CROSS PAGE MODULE",
+          "page": 1,
+          "bbox": [
+            420,
+            260,
+            828,
+            312
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "3",
+          "page": 1,
+          "bbox": [
+            1050,
+            260,
+            1110,
+            312
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "FA70000001001",
+          "page": 1,
+          "bbox": [
+            1320,
+            260,
+            1632,
+            312
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "FA70000001002",
+          "page": 2,
+          "bbox": [
+            1320,
+            160,
+            1632,
+            212
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "FA70000001003",
+          "page": 2,
+          "bbox": [
+            1320,
+            280,
+            1632,
+            332
+          ],
+          "confidence": 0.99
+        }
+      ]
+    },
+    "marker_policy": {
+      "pdf": "marker_policy_cases.pdf",
+      "spans": [
+        {
+          "text": "500 1042004437-01",
+          "page": 1,
+          "bbox": [
+            80,
+            100,
+            488,
+            152
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "PART-A",
+          "page": 1,
+          "bbox": [
+            80,
+            170,
+            224,
+            222
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "S/N:",
+          "page": 1,
+          "bbox": [
+            80,
+            250,
+            176,
+            302
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "FA70000002001",
+          "page": 1,
+          "bbox": [
+            220,
+            250,
+            532,
+            302
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "USI Code:",
+          "page": 1,
+          "bbox": [
+            80,
+            330,
+            296,
+            382
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "LBADVA70000002001",
+          "page": 1,
+          "bbox": [
+            300,
+            330,
+            708,
+            382
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "Packing List",
+          "page": 1,
+          "bbox": [
+            80,
+            470,
+            368,
+            522
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "SP260073",
+          "page": 1,
+          "bbox": [
+            80,
+            540,
+            272,
+            592
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "BIC / Swift Code: DEUTUS33",
+          "page": 1,
+          "bbox": [
+            80,
+            610,
+            704,
+            662
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "501 1042004438-01",
+          "page": 2,
+          "bbox": [
+            80,
+            100,
+            488,
+            152
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "PART-B",
+          "page": 2,
+          "bbox": [
+            80,
+            170,
+            224,
+            222
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "USI Code:",
+          "page": 2,
+          "bbox": [
+            80,
+            250,
+            296,
+            302
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "LBADVA70000003001",
+          "page": 2,
+          "bbox": [
+            300,
+            250,
+            708,
+            302
+          ],
+          "confidence": 0.99
+        }
+      ]
+    },
+    "rotated_low_confidence": {
+      "pdf": "rotated_low_confidence.pdf",
+      "spans": [
+        {
+          "text": "PART NUMBER",
+          "page": 1,
+          "bbox": [
+            80,
+            120,
+            344,
+            172
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "PART NAME",
+          "page": 1,
+          "bbox": [
+            420,
+            120,
+            636,
+            172
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "QTY",
+          "page": 1,
+          "bbox": [
+            1050,
+            120,
+            1122,
+            172
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "S/N",
+          "page": 1,
+          "bbox": [
+            1320,
+            120,
+            1392,
+            172
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "PN-404",
+          "page": 1,
+          "bbox": [
+            80,
+            260,
+            224,
+            312
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "ROTATED MODULE",
+          "page": 1,
+          "bbox": [
+            420,
+            260,
+            756,
+            312
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "1",
+          "page": 1,
+          "bbox": [
+            1050,
+            260,
+            1110,
+            312
+          ],
+          "confidence": 0.99
+        },
+        {
+          "text": "FA7O000004001",
+          "page": 1,
+          "bbox": [
+            1320,
+            260,
+            1632,
+            312
+          ],
+          "confidence": 0.72
+        }
+      ]
+    }
+  }
+}

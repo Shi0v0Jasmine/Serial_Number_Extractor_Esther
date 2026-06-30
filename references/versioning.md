@@ -1,8 +1,8 @@
 # Versioning
 
-Current version: `1.0.2`.
+Current source version: `2.0.0`.
 
-Latest released version: `1.0.2`.
+Latest released version: `2.0.0`.
 
 Use semantic versioning:
 
@@ -42,11 +42,14 @@ Examples:
 
 ## Current Scope
 
-`1.0.x` covers:
+`2.0.0` adds:
 
-- local PDF text extraction without OCR;
-- GUI and CLI operation;
-- Excel / CSV output;
-- `Part Number`, `Part Name`, `Serial Number`, `Order Qty`, `Serial Count`, and `Qty Check`;
-- vendor-specific parsing for the currently verified Esther samples;
-- warnings instead of hard failure for quantity mismatch or unverified counts.
+- a testable `serial_extractor` core package;
+- native text, layout-table, marker, and optional local PaddleOCR backends;
+- confidence-gated OCR output and a separate `Review` worksheet;
+- local sidecar installation with checksum verification and atomic upgrades;
+- automated tests and CI gates.
+
+Do not tag or release a new version until the local commercial PDF regression, fast
+pytest suite, PaddleOCR integration test, coverage gate, executable smoke, and OCR
+support install smoke have passed.

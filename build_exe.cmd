@@ -1,11 +1,18 @@
 @echo off
 setlocal
 set "APP_DIR=%~dp0"
-set "BUNDLED_PY=C:\Users\21136\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
+set "BUNDLED_PY=%SERIAL_EXTRACTOR_PYTHON%"
+
+if not defined BUNDLED_PY (
+  for /f "delims=" %%P in ('py -3.12 -c "import sys; print(sys.executable)" 2^>nul') do set "BUNDLED_PY=%%P"
+)
+
+if not defined BUNDLED_PY (
+  for /f "delims=" %%P in ('python -c "import sys; print(sys.executable)" 2^>nul') do set "BUNDLED_PY=%%P"
+)
 
 if not exist "%BUNDLED_PY%" (
-  echo Bundled Python runtime not found:
-  echo %BUNDLED_PY%
+  echo Python runtime not found. Set SERIAL_EXTRACTOR_PYTHON to a Python 3.12 executable.
   pause
   exit /b 1
 )
@@ -16,7 +23,7 @@ if exist "%APP_DIR%.build_deps" (
   set "PYTHONPATH=%APP_DIR%.build_deps;%PYTHONPATH%"
 )
 
-set "COMMON_ARGS=--onefile --clean --hidden-import pypdf --hidden-import openpyxl --hidden-import openpyxl.styles --hidden-import openpyxl.utils"
+set "COMMON_ARGS=--onefile --clean --hidden-import pypdf --hidden-import pdfplumber --hidden-import openpyxl --hidden-import openpyxl.styles --hidden-import openpyxl.utils"
 
 "%BUNDLED_PY%" -m PyInstaller ^
   %COMMON_ARGS% ^

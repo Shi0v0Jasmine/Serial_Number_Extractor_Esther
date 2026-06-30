@@ -1,27 +1,23 @@
 @echo off
 setlocal
 set "APP_DIR=%~dp0"
-set "BUNDLED_PY=C:\Users\21136\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
+set "BUNDLED_PY=%SERIAL_EXTRACTOR_PYTHON%"
+
+if not defined BUNDLED_PY (
+  for /f "delims=" %%P in ('py -3.12 -c "import sys; print(sys.executable)" 2^>nul') do set "BUNDLED_PY=%%P"
+)
+
+if not defined BUNDLED_PY (
+  for /f "delims=" %%P in ('python -c "import sys; print(sys.executable)" 2^>nul') do set "BUNDLED_PY=%%P"
+)
 
 if exist "%BUNDLED_PY%" (
   "%BUNDLED_PY%" "%APP_DIR%serial_number_extractor.py"
   goto :end
 )
 
-where py >nul 2>nul
-if %ERRORLEVEL%==0 (
-  py "%APP_DIR%serial_number_extractor.py"
-  goto :end
-)
-
-where python >nul 2>nul
-if %ERRORLEVEL%==0 (
-  python "%APP_DIR%serial_number_extractor.py"
-  goto :end
-)
-
 echo Python runtime not found.
-echo Please run this on the Codex machine or install Python plus pypdf/openpyxl.
+echo Set SERIAL_EXTRACTOR_PYTHON to a Python 3.12 executable or install Python plus the requirements.
 pause
 
 :end

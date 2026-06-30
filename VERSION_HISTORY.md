@@ -1,96 +1,71 @@
 # Serial Number Extractor Version History
 
-本文件用于记录 Serial Number Extractor 的版本号、变更原因和验证记录。发布 GitHub release 前，应先更新本文件。
+Version format: `MAJOR.MINOR.PATCH`. Update this file and `references/versioning.md` before each release.
 
-This file tracks version numbers, change reasons, and verification notes for Serial Number Extractor. Update it before creating a GitHub release.
+## Current State
 
-## Version Number Definition / 版本号定义
+- Current source version: `2.0.0`.
+- Latest released version: `2.0.0`.
 
-Format / 格式:
+## `2.0.0` - 2026-06-29
 
-```text
-MAJOR.MINOR.PATCH
-```
+Reason for MAJOR: adds scanned-PDF/OCR support and splits the former monolithic script into a testable extraction package.
 
-### MAJOR / 主版本号
+### Added
 
-中文：当加入新的主工作流或明显改变工具能力边界时增加。
+- New `serial_extractor` package with unified models: `DocumentPage`, `TextSpan`, `ProductBlock`, `SerialRecord`, and `ReviewCandidate`.
+- pdfplumber layout-table extraction with header synonyms, column order changes, repeated headers, and cross-page serial continuation.
+- ECI layout mapping for:
+  - `ON324921 / OTR100Q28_LR4 / 1`
+  - `ON324921 / OTR100Q28_LR4 / 12`
+  - `X66706 / TM400ENB INCLUDING FIPS KIT / 2`
+- Optional local PaddleOCR sidecar pinned to `paddlepaddle==3.2.2`, `paddleocr==3.7.0`, `PP-OCRv6_small_det`, and `PP-OCRv6_small_rec`.
+- CLI options: `--ocr`, `--ocr-min-confidence`, `--install-ocr`, `--ocr-package`, and `--version`.
+- New `Review` sheet. `Details` and `Summary` now include backend, strategy, score, OCR confidence, bbox, and OCR status diagnostics.
+- pytest/Hypothesis tests covering synthetic PDFs, installer behavior, CLI, output schema, vendor contracts, real PDF regression, and PaddleOCR integration.
+- Windows/Linux GitHub Actions fast tests and a Windows PaddleOCR integration job.
+- Release packaging script for GUI/CLI executables, OCR support zip, SHA256 checksums, and OCR download manifest.
 
-English: Increase when a new main workflow is added or the tool capability boundary changes materially.
+### Changed
 
-### MINOR / 次版本号
+- Parser priority is now explicit vendor/layout structure, generic table, marker block, then restricted strong-pattern fallback.
+- OCR candidates must be in a serial column or marker area and meet the confidence threshold before entering the main output.
+- Low-confidence OCR candidates keep the raw text and do not auto-correct ambiguous characters such as `O/0`, `I/1`, or `S/5`.
+- S/N priority is scoped to one product block. If only USI Code exists in that block, USI Code is still emitted.
+- Removed broad ECI full-document numeric fallback to avoid order numbers, prices, commodity codes, and document metadata.
+- Marker fallback now stops at obvious document metadata boundaries such as `Packing List`, bank/payment lines, and account details.
+- OCR layout grouping is more tolerant for PaddleOCR bbox jitter while keeping native PDF layout grouping unchanged.
+- The local Windows CPU OCR runtime uses `paddlepaddle==3.2.2`; `3.3.1` hit a oneDNN/PIR runtime error on the tested Windows machine.
 
-中文：当主工作流不变，但支持范围明显扩大时增加，例如新增大类 vendor adapter、OCR 工作流或新的输出模式。
+### Acceptance Baseline
 
-English: Increase when the main workflow stays the same but support expands materially, such as a new major vendor adapter, OCR workflow, or output mode.
+- Original 7 samples: `1073` records, including ECI `15/15 OK`.
+- Two Adtran fix samples: `242` records, all `OK`.
+- Total: `1315` records.
+- `Part Number = 1063707680-11`: `0`.
+- Serial ending in `SN`: `0`.
+- Raw commercial PDFs are not committed to Git.
 
-### PATCH / 修订号
+### Release Status
 
-中文：当修复 bug、修正 vendor-specific 解析规则、改善校验逻辑、调整文档或修复包装问题时增加。
+Release package includes Windows GUI/CLI executables plus an optional offline OCR support package and download manifest. The release gate is fast pytest, PaddleOCR integration, coverage, the local 9-PDF regression, executable smoke, and OCR support install smoke.
 
-English: Increase for bug fixes, vendor-specific parsing corrections, validation improvements, documentation updates, or packaging fixes.
+## `1.0.2` - 2026-06-16
 
-## Current Version / 当前版本
+- Fixed Adtran `This Position Line Contains`: the row contributes only Qty; Part Number and Part Name stay on the parent product block.
+- Added `BC########` Part Number recognition.
+- Fixed `SN:FA...` being extracted as `FA...SN`.
+- Clarified S/N priority and USI fallback behavior.
+- Released as GitHub `v1.0.2`.
 
-Current version: `1.0.2`.
+Verification at that time: two Adtran fix samples had `242` records, all `OK`; original 7 samples had `1073` records, with ECI still `UNVERIFIED`.
 
-当前版本：`1.0.2`。
+## `1.0.1` - 2026-06-16
 
-Latest released version: `1.0.2`.
+- Fixed Adtran mismatch caused by S/N and USI appearing together.
+- Released as GitHub `v1.0.1`.
 
-最新已发布版本：`1.0.2`。
+## `1.0.0` - 2026-06-16
 
-## Change Log / 更新记录
-
-### `1.0.2` - 2026-06-16 Adtran Parent Part Mapping Fix / Adtran 主产品映射修复
-
-中文：
-
-- 修复 Adtran 特殊格式：`This Position Line Contains` 下的行只用于读取数量，例如 `13 1063707680-11 F7/9TCE-PCN-10GU+10G` 只取 `Qty = 13`。
-- `Part Number` / `Part Name` 改为使用上方主产品块，例如 `BC00000647 / F7/9TCE-PCN-10GU+10G&1P-L`，不再把 position line 中的 `1063707680-11` 当成最终 Part Number。
-- 新增 `BC########` 型 Adtran part number 识别，避免主产品块被误判为 serial-like token。
-- 保留并完善 S/N 与 USI Code 优先级：有明确 serial marker 时优先使用 S/N/Serial；只有 USI Code 时才把 USI Code 作为 serial number。
-- 清理 `SN:FA...` 在 PDF 文本抽取中变成 `FA...SN` 的尾缀问题。
-- 本版本已重新打包，并将作为 GitHub release `v1.0.2` 发布。
-
-English:
-
-- Fixed an Adtran special format where rows under `This Position Line Contains` provide quantity only. For example, `13 1063707680-11 F7/9TCE-PCN-10GU+10G` contributes only `Qty = 13`.
-- `Part Number` / `Part Name` now come from the parent product block, such as `BC00000647 / F7/9TCE-PCN-10GU+10G&1P-L`, instead of the position-line material `1063707680-11`.
-- Added recognition for `BC########` Adtran part numbers so parent product blocks are not rejected as serial-like tokens.
-- Preserved and tightened S/N vs USI Code priority: explicit serial markers win; USI Code is exported only when no marked serial exists.
-- Cleaned the PDF extraction artifact where `SN:FA...` can appear as `FA...SN`.
-- This version has been rebuilt and will be published as GitHub release `v1.0.2`.
-
-Verification:
-
-- `01_Input_PDFs` Adtran regression: `242` serials, `OK=242`, `MISMATCH=0`, `UNVERIFIED=0`.
-- `BC00000647 / F7/9TCE-PCN-10GU+10G&1P-L`: one `13/13 OK` group and one `9/9 OK` group.
-- No rows remain with `Part Number = 1063707680-11`.
-- Original 7 vendor samples: `1073` serials, `MISMATCH=0`; existing `UNVERIFIED=15` best-effort rows unchanged.
-
-### `1.0.1` - 2026-06-16 USI Code Duplicate Source Fix / USI Code 重复来源修复
-
-中文：
-
-- 修复 Adtran PDF 中 `USI Code:` 区域被误识别为 serial number 的问题，避免同一设备同时由 S/N 和 USI 产生重复或 mismatch。
-- 重新生成并发布 `v1.0.1` 包。
-
-English:
-
-- Fixed Adtran PDFs where the `USI Code:` section could be misread as serial numbers, preventing duplicate records or mismatch when both S/N and USI are present.
-- Rebuilt and released package `v1.0.1`.
-
-### `1.0.0` - 2026-06-16 Initial Release / 初始发布
-
-中文：
-
-- 发布初版 Serial Number Extractor，支持 GUI / CLI，从 vendor PDF 中提取 `Part Number`、`Part Name`、`Serial Number` 并输出 Excel / CSV。
-- 输出包含 `SAP_Copy`、`Details`、`Summary`，支持 `Order Qty`、`Serial Count`、`Qty Check` 校验。
-- 使用 Esther 提供的 7 个 vendor sample 验证，总 serial 数为 `1073`。
-
-English:
-
-- Released the initial Serial Number Extractor with GUI / CLI support for extracting `Part Number`, `Part Name`, and `Serial Number` from vendor PDFs into Excel / CSV.
-- Output includes `SAP_Copy`, `Details`, and `Summary`, with `Order Qty`, `Serial Count`, and `Qty Check` validation.
-- Verified against Esther's 7 vendor samples with total serial count `1073`.
+- First GUI/CLI release with Excel/CSV output, Part/Serial extraction, and Qty validation.
+- Verified against Esther's original 7 samples with `1073` records.
