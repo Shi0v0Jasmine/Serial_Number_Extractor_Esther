@@ -69,7 +69,27 @@ CIENA_PART_RE = re.compile(r"^\d+\s+(\d+)\s+EA\s+([A-Z0-9][A-Z0-9/#.+_-]+)$", re
 DTC_QTY_RE = re.compile(r"^\d{1,5}$")
 PURE_IT_RE = re.compile(r"^(.+?)\s+\(Quantit[eé]\s+(\d+)\)\s*:\s*(.+)$", re.IGNORECASE)
 RUID_ITEM_RE = re.compile(r"Item\s+code\s+([A-Z0-9-]+)", re.IGNORECASE)
-SMARTOPTICS_RE = re.compile(r"^([A-Z0-9][A-Z0-9/_+.-]*?)\d{5,}\s+(\d+)\s+PCS", re.IGNORECASE)
+SMARTOPTICS_LEGACY_RE = re.compile(
+    r"^(?P<part>(?=[A-Z0-9/_+.-]*[A-Z])[A-Z0-9][A-Z0-9/_+.-]*?)"
+    r"(?P<item>\d{5,})\s+(?P<qty>\d{1,6})\s+PCS"
+    r"(?:\s*(?P<customs>\d{8}))?$",
+    re.IGNORECASE,
+)
+SMARTOPTICS_PRODUCT_ROW_RE = re.compile(
+    r"^(?P<part>\d{5,10})\s+(?P<qty>\d{1,6})\s*PCS\s*"
+    r"(?P<name>[A-Z0-9][A-Z0-9/_+.\-&]*)\s+(?P<customs>\d{8})$",
+    re.IGNORECASE,
+)
+SMARTOPTICS_OCR_PRODUCT_ROW_RE = re.compile(
+    r"^(?P<part>\d{5,10})\s+"
+    r"(?P<name>[A-Z0-9][A-Z0-9 /_+.\-&]*?)\s+"
+    r"(?P<customs>\d{8})\s+(?P<qty>\d{1,6})\s*PCS$",
+    re.IGNORECASE,
+)
+SMARTOPTICS_SERIAL_RE = re.compile(
+    r"\b[KG](?=[A-Z0-9]{10,31}\b)(?=[A-Z0-9]*\d)[A-Z0-9]{10,31}\b",
+    re.IGNORECASE,
+)
 
 SERIAL_MARKER_RE = re.compile(
     r"(S/N|Serial\s*(?:number|#|no)|LOT/SERIAL|SN\s*number|Serial\s*numbers\s*are)",
@@ -433,18 +453,53 @@ def detect_pure_it_blocks(lines: list[str], blocks: list[ProductBlock]) -> None:
             add_product_block(blocks, idx, end, part_number, part_name, qty, "pure_it")
 
 
+def parse_smartoptics_product_line(line: str) -> tuple[str, str, int] | None:
+    product_match = SMARTOPTICS_PRODUCT_ROW_RE.match(line)
+    if product_match:
+        return (
+            product_match.group("part"),
+            product_match.group("name"),
+            int(product_match.group("qty")),
+        )
+
+    ocr_match = SMARTOPTICS_OCR_PRODUCT_ROW_RE.match(line)
+    if ocr_match:
+        return (
+            ocr_match.group("part"),
+            ocr_match.group("name"),
+            int(ocr_match.group("qty")),
+        )
+
+    legacy_match = SMARTOPTICS_LEGACY_RE.match(line)
+    if legacy_match:
+        return (
+            legacy_match.group("item"),
+            legacy_match.group("part"),
+            int(legacy_match.group("qty")),
+        )
+    return None
+
+
 def detect_smartoptics_blocks(lines: list[str], blocks: list[ProductBlock]) -> None:
-    for idx, line in enumerate(lines):
-        match = SMARTOPTICS_RE.match(line)
-        if match and idx + 1 < len(lines):
-            part_number = match.group(1)
-            qty = int(match.group(2))
-            if idx + 2 < len(lines) and is_part_number_like(lines[idx + 2]):
-                part_number = lines[idx + 2]
-            part_name = strip_serials_from_part_name(lines[idx + 1])
-            if is_valid_part_name(part_name):
-                end = next_matching_line(lines, idx, SMARTOPTICS_RE) - 1
-                add_product_block(blocks, idx, end, part_number, part_name, qty, "smartoptics")
+    starts = [
+        (idx, parsed)
+        for idx, line in enumerate(lines)
+        if (parsed := parse_smartoptics_product_line(line)) is not None
+    ]
+    for position, (idx, parsed) in enumerate(starts):
+        part_number, part_name, qty = parsed
+        if not is_valid_part_name(part_name):
+            continue
+        next_start = starts[position + 1][0] if position + 1 < len(starts) else len(lines)
+        add_product_block(
+            blocks,
+            idx,
+            next_start - 1,
+            part_number,
+            part_name,
+            qty,
+            "smartoptics",
+        )
 
 
 def detect_dtc_blocks(lines: list[str], blocks: list[ProductBlock]) -> None:
@@ -726,6 +781,19 @@ def extract_document_records(
         for match in KNOWN_SERIAL_RE.finditer(line):
             method = "usi_code" if line_index in usi_code_lines else "known_pattern"
             add_record(records, seen, source_file, page, match.group(0), item_hint, method, "high", product_block)
+        if product_block is not None and product_block.source == "smartoptics":
+            for match in SMARTOPTICS_SERIAL_RE.finditer(line):
+                add_record(
+                    records,
+                    seen,
+                    source_file,
+                    page,
+                    match.group(0),
+                    item_hint,
+                    "smartoptics_serial",
+                    "high",
+                    product_block,
+                )
 
     for line_index in sorted(restricted_context_indexes):
         if line_index in usi_code_lines and block_has_primary_marker(line_index):
@@ -954,7 +1022,7 @@ def extract_pdf(
         for page in _ocr_document_pages(accepted_ocr_spans, pages_to_ocr):
             native_text = native_text_by_page.get(page.page_number, "")
             native_lines = native_lines_by_page.get(page.page_number, [])
-            if options.ocr_mode != "force" or not has_usable_native_page_text(native_text, native_lines):
+            if options.ocr_mode == "force" or not has_usable_native_page_text(native_text, native_lines):
                 native_lines_by_page[page.page_number] = page.lines
                 native_text_by_page[page.page_number] = page.text
                 ocr_replaced_pages.add(page.page_number)

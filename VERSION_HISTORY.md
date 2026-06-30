@@ -4,8 +4,22 @@ Version format: `MAJOR.MINOR.PATCH`. Update this file and `references/versioning
 
 ## Current State
 
-- Current source version: `2.0.0`.
-- Latest released version: `2.0.0`.
+- Current source version: `2.0.1`.
+- Latest released version: `2.0.1`.
+
+## `2.0.1` - 2026-06-30
+
+- Fixed `OCR: force` so OCR text replaces usable native text instead of only running
+  PaddleOCR and silently keeping the native extraction result.
+- Added Smartoptics product-row parsing for native and PaddleOCR reading orders,
+  including cross-page serial continuation.
+- Restricted long `K...` and `G...` serial acceptance to confirmed Smartoptics
+  product blocks.
+- Corrected legacy Smartoptics field mapping: the numeric value in the `Product`
+  column is `Part Number`, while the short model in the serial-number column is
+  `Part Name`.
+- Added regression coverage for old/new Smartoptics forms, customs-code exclusion,
+  repeated barcode text, OCR force replacement, and cross-page blocks.
 
 ## `2.0.0` - 2026-06-29
 

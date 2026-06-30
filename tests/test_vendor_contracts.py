@@ -22,12 +22,14 @@ from serial_number_extractor import apply_quantity_validation, extract_document_
         (
             "smartoptics",
             [
-                "TQD013-TUNC-SO85043100 2 PCS",
-                "QSFP-DD 400G OpenZR+",
+                "Product QuantitySerial number EU customs ref.no:",
+                "TQD013-TUNC-SO115080 2 PCS85176200",
+                "QSFP-DD 400G OpenZR+ 100GE 1310nm",
+                "TQD013-TUNC-SO",
                 "VB000001",
                 "VB000002",
             ],
-            ("TQD013-TUNC-SO", "QSFP-DD 400G OpenZR+", 2, 2, "OK"),
+            ("115080", "TQD013-TUNC-SO", 2, 2, "OK"),
         ),
         (
             "dtc",
@@ -75,4 +77,54 @@ def test_vendor_contracts(case_name, lines, expected, line_pages) -> None:
     assert {record.order_qty for record in records} == {qty}
     assert {record.serial_count for record in records} == {count}
     assert {record.qty_check for record in records} == {status}
+    assert warnings == []
+
+
+def test_smartoptics_product_rows_and_cross_page_continuations() -> None:
+    lines = [
+        "Product QuantitySerial number EU customs ref.no:",
+        "112917 3 PCSDCP-2-FB/HW 85176200",
+        "Base HW, 1RU, 2-slot chassis, mgt board",
+        "*K1000DCP00001*K1000DCP00001",
+        "*K1000DCP00002*K1000DCP00002",
+        "Product QuantitySerial number EU customs ref.no:",
+        "*K1000DCP00003*K1000DCP00003",
+        "100719 DCP-2-PSU-AC-FB 85043100 2 PCS",
+        "AC Power Supply for DCP platform",
+        "*G1000001NA000000001*G1000001NA000000001",
+        "Product QuantitySerial number EU customs ref.no:",
+        "*G1000001NA000000002*G1000001NA000000002",
+    ]
+    pages = [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3]
+
+    records = extract_document_records("smartoptics-packing-slip.pdf", lines, pages, set())
+    warnings: list[str] = []
+    apply_quantity_validation(records, warnings)
+
+    assert len(records) == 5
+    assert not {"85043100", "85176200", "100GE", "1310NM"}.intersection(
+        record.serial_number for record in records
+    )
+
+    first_part = [record for record in records if record.part_number == "112917"]
+    second_part = [record for record in records if record.part_number == "100719"]
+
+    assert [record.serial_number for record in first_part] == [
+        "K1000DCP00001",
+        "K1000DCP00002",
+        "K1000DCP00003",
+    ]
+    assert {record.part_name for record in first_part} == {"DCP-2-FB/HW"}
+    assert {record.order_qty for record in first_part} == {3}
+    assert {record.serial_count for record in first_part} == {3}
+    assert {record.qty_check for record in first_part} == {"OK"}
+
+    assert [record.serial_number for record in second_part] == [
+        "G1000001NA000000001",
+        "G1000001NA000000002",
+    ]
+    assert {record.part_name for record in second_part} == {"DCP-2-PSU-AC-FB"}
+    assert {record.order_qty for record in second_part} == {2}
+    assert {record.serial_count for record in second_part} == {2}
+    assert {record.qty_check for record in second_part} == {"OK"}
     assert warnings == []

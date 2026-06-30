@@ -1,6 +1,7 @@
 .build_deps/
 .test_deps/
 .ocr_deps/
+.paddlex/
 .venv-test/
 .pytest_cache/
 .hypothesis/

@@ -1,8 +1,8 @@
 # Versioning
 
-Current source version: `2.0.0`.
+Current source version: `2.0.1`.
 
-Latest released version: `2.0.0`.
+Latest released version: `2.0.1`.
 
 Use semantic versioning:
 

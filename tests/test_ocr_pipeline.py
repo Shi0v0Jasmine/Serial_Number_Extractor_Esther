@@ -124,7 +124,7 @@ def test_force_ocr_processes_page_with_native_text(tmp_path) -> None:
     assert [record.serial_number for record in result.records] == ["FA70000000001"]
 
 
-def test_force_ocr_keeps_usable_native_serials_as_fallback(tmp_path) -> None:
+def test_force_ocr_replaces_usable_native_serials(tmp_path) -> None:
     pdf_path = tmp_path / "native-serial.pdf"
     pdf = canvas.Canvas(str(pdf_path), pagesize=(800, 400))
     pdf.drawString(20, 350, "S/N: FA70000000002")
@@ -138,8 +138,8 @@ def test_force_ocr_keeps_usable_native_serials_as_fallback(tmp_path) -> None:
     )
 
     assert engine.calls == [(pdf_path, [1])]
-    assert [record.serial_number for record in result.records] == ["FA70000000002"]
-    assert result.records[0].backend == "native"
+    assert [record.serial_number for record in result.records] == ["FA70000000001"]
+    assert result.records[0].backend == "paddleocr"
 
 
 def test_corrupt_pdf_returns_warning_instead_of_raising(tmp_path) -> None:

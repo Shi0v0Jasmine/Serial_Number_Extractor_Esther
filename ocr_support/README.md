@@ -18,7 +18,7 @@ Example manifest:
 
 ```json
 {
-  "version": "2.0.0",
+  "version": "2.0.1",
   "worker": "ocr_worker.exe",
   "paddlepaddle": "3.2.2",
   "paddleocr": "3.7.0",
@@ -53,4 +53,5 @@ It writes UTF-8 JSON to stdout:
 
 Installation verifies the package SHA256 supplied by the download manifest, rejects path traversal, extracts to a temporary directory, validates the worker, and atomically swaps versions. Failed upgrades retain the previous valid installation.
 
-`serial_extractor/ocr_worker.py` is the source worker. Building and publishing the self-contained runtime/models package is a release action and is intentionally not performed in the pending `2.0.0` source change.
+`serial_extractor/ocr_worker.py` is the source worker. Building and publishing the
+self-contained runtime/models package is performed by the release workflow.

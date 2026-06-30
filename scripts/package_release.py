@@ -8,7 +8,7 @@ import zipfile
 from pathlib import Path
 
 
-VERSION = "2.0.0"
+VERSION = "2.0.1"
 TAG = f"v{VERSION}"
 REPOSITORY_URL = "https://github.com/Shi0v0Jasmine/Serial_Number_Extractor_Esther"
 MODELS = ("PP-OCRv6_small_det", "PP-OCRv6_small_rec")
@@ -66,6 +66,7 @@ def main() -> int:
             (require_file(dist / "SerialNumberExtractor.exe"), "SerialNumberExtractor.exe"),
             (require_file(dist / "SerialNumberExtractorCLI.exe"), "SerialNumberExtractorCLI.exe"),
             (require_file(root / "README.md"), "README.md"),
+            (require_file(root / "OCR_USAGE_GUIDE_CN_EN.md"), "OCR_USAGE_GUIDE_CN_EN.md"),
         ],
     )
 

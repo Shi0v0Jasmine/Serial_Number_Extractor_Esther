@@ -64,5 +64,5 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 "%BUNDLED_PY%" scripts\package_release.py
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
-echo Release package created under "%APP_DIR%release\v2.0.0"
+echo Release package created under "%APP_DIR%release\v2.0.1"
 endlocal

@@ -9,8 +9,8 @@ Local tool for extracting vendor PDF shipment data into Excel and CSV:
 - `Serial Count`
 - `Qty Check`
 
-Current version: `2.0.0`.
-Latest GitHub release: `2.0.0`.
+Current version: `2.0.1`.
+Latest GitHub release: `2.0.1`.
 
 ## Workflow
 
@@ -111,10 +111,10 @@ More detail:
 cmd /c build_release.cmd
 ```
 
-This creates release assets under `release/v2.0.0/`:
+This creates release assets under `release/v2.0.1/`:
 
-- `SerialNumberExtractor_v2.0.0_Windows.zip`
-- `SerialNumberExtractor_OCRSupport_v2.0.0_Windows.zip`
+- `SerialNumberExtractor_v2.0.1_Windows.zip`
+- `SerialNumberExtractor_OCRSupport_v2.0.1_Windows.zip`
 - `ocr_support_manifest.json`
 - `SHA256SUMS.txt`
 
